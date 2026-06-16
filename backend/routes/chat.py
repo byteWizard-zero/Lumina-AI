@@ -31,7 +31,7 @@ async def chat(
             .maybe_single()\
             .execute()
             
-        if not user_res.data:
+        if not user_res or not user_res.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User profile not found. Please complete onboarding first."
