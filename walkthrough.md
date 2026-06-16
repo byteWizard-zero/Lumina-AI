@@ -112,6 +112,12 @@ Lumina/
 - **Git Ignore Security**: Created a root-level `.gitignore` and updated `client/.gitignore` to ignore `.env` files (protecting sensitive credentials like `SUPABASE_SERVICE_KEY` and `GEMINI_API_KEY` from public exposure) and local build environments (`venv`, `.dart_tool/`, `build/`).
 - **Templates**: Created `backend/.env.example` and `client/assets/.env.example` templates to guide production deployment setups.
 
+### 2.11 Pre-emptive Render Backend Wakeup & Offline Connection Checker (`/client`)
+- **Internet Checker**: Integrated `connectivity_plus` to listen to network adapters. Performs DNS socket lookups on `google.com` to verify true internet capability.
+- **Glassmorphic Offline Screen**: Created a full-screen `OfflineOverlay` displaying a cozy offline illustration: *"Lost connection to the stars. Grab a warm cup of tea ☕ while we reconnect..."* It overlay-blocks all user interaction automatically when the device goes offline.
+- **Pre-emptive Wakeup Service**: Initializes a background ping to the Render backend `GET /ping` as soon as the app launches (or connection is restored). Since Render's free tier sleeps after 15 minutes, this triggers a "cold boot" immediately while the user is on the welcome handwriting animation or login screens, neutralizing the startup spinup lag.
+- **Status Indicator**: The chat app bar displays `"Waking up companion..."` in amber when the server is cold booting, changing back to regular cozy AI status once the backend returns `200 OK`.
+
 ---
 
 ## 3. Verification & How to Run

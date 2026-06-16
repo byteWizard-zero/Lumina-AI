@@ -6,6 +6,7 @@ import 'core/router.dart';
 import 'core/theme.dart';
 import 'features/settings/providers/settings_provider.dart';
 import 'core/providers/update_provider.dart';
+import 'core/providers/connectivity_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,8 @@ class _MyAppState extends ConsumerState<MyApp> {
     super.initState();
     Future.microtask(() {
       ref.read(updateProvider.notifier).checkForUpdates();
+      // Initialize network listener and pre-emptively wake up Render server
+      ref.read(connectivityProvider.notifier);
     });
   }
 

@@ -15,6 +15,8 @@ import '../../../shared/widgets/glass_container.dart';
 import '../../../shared/widgets/ambient_particles.dart';
 import '../widgets/entrance_transition.dart';
 import '../../../shared/widgets/update_prompt_dialog.dart';
+import '../../../shared/widgets/offline_overlay.dart';
+import '../../../core/providers/connectivity_provider.dart';
 
 class ChatScreen extends ConsumerWidget {
   const ChatScreen({super.key});
@@ -67,6 +69,7 @@ class ChatScreen extends ConsumerWidget {
     final chatState = ref.watch(chatProvider);
     final chatNotifier = ref.read(chatProvider.notifier);
     final profile = ref.watch(userProfileProvider);
+    final connectivity = ref.watch(connectivityProvider);
     
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final primaryTextColor = isDarkMode ? LuminaColors.textPrimaryDark : LuminaColors.textPrimary;
@@ -126,10 +129,14 @@ class ChatScreen extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        _getCozyStatus(profile.aiName, profile.archetype, chatState.isTyping),
+                        !connectivity.isServerAwake 
+                            ? 'Waking up companion...' 
+                            : _getCozyStatus(profile.aiName, profile.archetype, chatState.isTyping),
                         style: GoogleFonts.dmSans(
                           fontSize: 12,
-                          color: chatState.isTyping ? LuminaColors.accentAmber : LuminaColors.accentGreen,
+                          color: !connectivity.isServerAwake 
+                              ? LuminaColors.accentAmber 
+                              : (chatState.isTyping ? LuminaColors.accentAmber : LuminaColors.accentGreen),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -269,6 +276,10 @@ class ChatScreen extends ConsumerWidget {
           // Native App Updater Modal Prompt Overlay
           const Positioned.fill(
             child: UpdatePromptDialog(),
+          ),
+          // Offline Overlay (Blocks UI if network is lost)
+          const Positioned.fill(
+            child: OfflineOverlay(),
           ),
         ],
       ),

@@ -26,8 +26,8 @@ class UpdatePromptDialog extends ConsumerWidget {
     final info = updateState.updateInfo;
     if (info == null) return const SizedBox.shrink();
 
-    return WillPopScope(
-      onWillPop: () async => updateState.status != UpdateStatus.downloading,
+    return PopScope(
+      canPop: updateState.status != UpdateStatus.downloading,
       child: Stack(
         children: [
           // Semi-transparent blurred backdrop overlay
