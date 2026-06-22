@@ -16,7 +16,7 @@ class MessageBubble extends ConsumerWidget {
   });
 
   void _showReactionMenu(BuildContext context, WidgetRef ref) {
-    final List<String> emojis = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+    final List<String> emojis = ["👍", "❤️", "😂", "😮", "😢","🔥"];
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     showDialog(
