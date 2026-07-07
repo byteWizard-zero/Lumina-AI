@@ -47,7 +47,7 @@ To quickly install Lumina on your Android device:
 ### Mobile Client Setup
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/1bitVscoder/Lumina-AI.git
+   git clone https://github.com/byteWizard-zero/Lumina-AI.git
    cd Lumina-AI/client
    ```
 2. **Setup Environment Variables:**
@@ -57,7 +57,7 @@ To quickly install Lumina on your Android device:
    SUPABASE_ANON_KEY=your-supabase-anonymous-key
    BACKEND_BASE_URL=http://10.0.2.2:8000
    GOOGLE_CLIENT_ID=your-google-oauth-client-id
-   GITHUB_REPO_OWNER=1bitVscoder
+   GITHUB_REPO_OWNER=byteWizard-zero
    GITHUB_REPO_NAME=Lumina-AI
    ```
 3. **Run Mobile App:**
