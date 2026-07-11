@@ -68,7 +68,7 @@ async def generate_gemini_content(
         
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.post(url, json=payload, timeout=30.0)
+                response = await client.post(url, json=payload, timeout=5.0)
                 
                 # If key is rate limited (429), invalid (400/403), or server has transient issues (500/502/503/504)
                 if response.status_code in [429, 400, 403, 500, 502, 503, 504]:
@@ -196,7 +196,7 @@ async def generate_summary(history: List[Dict[str, str]]) -> str:
     
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(url, json=payload, timeout=20.0)
+            response = await client.post(url, json=payload, timeout=5.0)
             response.raise_for_status()
             data = response.json()
             reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
