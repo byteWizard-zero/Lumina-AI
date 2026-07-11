@@ -93,15 +93,66 @@ async def generate_gemini_content(
                 # Mark key on cooldown and retry
                 key_rotator.mark_cooldown(active_key)
                 if attempt == max_retries - 1:
-                    raise Exception(f"Gemini API returned error state: {str(e)}")
+                    break
                 # Small sleep before retry
                 await asyncio.sleep(1.0)
             except Exception as e:
                 if attempt == max_retries - 1:
-                    raise e
+                    break
                 await asyncio.sleep(1.0)
                     
-    raise Exception("All rotation and fallback keys failed to respond successfully.")
+    # Try local FreeLLMAPI backup proxy if direct calls failed
+    try:
+        proxy_url = "http://localhost:3001/v1/chat/completions"
+        proxy_headers = {
+            "Authorization": "Bearer freellmapi-9a1c00a670d3d3d1a9a7b276f24e8c60e8ad730e2e110bb6",
+            "Content-Type": "application/json"
+        }
+        
+        proxy_messages = [{"role": "system", "content": system_instruction}]
+        for turn in history:
+            proxy_messages.append({
+                "role": turn["role"],
+                "content": turn["content"]
+            })
+            
+        if image_base64:
+            clean_base64 = image_base64
+            if "," in image_base64:
+                clean_base64 = image_base64.split(",")[1]
+            proxy_messages.append({
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": user_message},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{clean_base64}"
+                        }
+                    }
+                ]
+            })
+        else:
+            proxy_messages.append({
+                "role": "user",
+                "content": user_message
+            })
+            
+        proxy_payload = {
+            "model": "gemini-2.5-flash",
+            "messages": proxy_messages,
+            "temperature": temperature,
+            "max_tokens": 256
+        }
+        
+        async with httpx.AsyncClient() as client:
+            proxy_res = await client.post(proxy_url, json=proxy_payload, headers=proxy_headers, timeout=30.0)
+            proxy_res.raise_for_status()
+            proxy_data = proxy_res.json()
+            reply_text = proxy_data["choices"][0]["message"]["content"]
+            return reply_text.strip(), "freellmapi-proxy-backup"
+    except Exception as proxy_err:
+        raise Exception(f"All rotation and fallback keys failed to respond successfully. Proxy also failed: {proxy_err}")
 
 async def generate_summary(history: List[Dict[str, str]]) -> str:
     """
@@ -151,4 +202,32 @@ async def generate_summary(history: List[Dict[str, str]]) -> str:
             reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
             return reply_text.strip()
         except Exception as e:
-            return f"Failed to generate summary: {str(e)}"
+            # Fall back to FreeLLMAPI proxy for summary
+            try:
+                proxy_url = "http://localhost:3001/v1/chat/completions"
+                proxy_headers = {
+                    "Authorization": "Bearer freellmapi-9a1c00a670d3d3d1a9a7b276f24e8c60e8ad730e2e110bb6",
+                    "Content-Type": "application/json"
+                }
+                proxy_messages = [{"role": "system", "content": system_instruction}]
+                for turn in history:
+                    proxy_messages.append({
+                        "role": turn["role"],
+                        "content": turn["content"]
+                    })
+                proxy_messages.append({
+                    "role": "user",
+                    "content": "Summarize this entire chat history in one clear sentence."
+                })
+                proxy_payload = {
+                    "model": "gemini-2.5-flash",
+                    "messages": proxy_messages,
+                    "temperature": 0.3,
+                    "max_tokens": 128
+                }
+                response = await client.post(proxy_url, json=proxy_payload, headers=proxy_headers, timeout=20.0)
+                response.raise_for_status()
+                data = response.json()
+                return data["choices"][0]["message"]["content"].strip()
+            except Exception as proxy_err:
+                return f"Failed to generate summary: {str(e)} (Proxy fallback also failed: {str(proxy_err)})"
