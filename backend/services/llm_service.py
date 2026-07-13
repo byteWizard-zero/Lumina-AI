@@ -1,3 +1,4 @@
+import os
 import httpx
 import asyncio
 from typing import List, Dict, Optional
@@ -103,9 +104,11 @@ async def generate_gemini_content(
                     
     # Try local FreeLLMAPI backup proxy if direct calls failed
     try:
-        proxy_url = "http://localhost:3001/v1/chat/completions"
+        base_url = os.getenv("OPENAI_API_BASE", "https://my-freellmapi-proxy.onrender.com/v1").rstrip("/")
+        proxy_url = f"{base_url}/chat/completions"
+        api_key = os.getenv("OPENAI_API_KEY", "freellmapi-ec75ec409b980a3248a3b64f0a702afb51781feb35d3ec23")
         proxy_headers = {
-            "Authorization": "Bearer freellmapi-9a1c00a670d3d3d1a9a7b276f24e8c60e8ad730e2e110bb6",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
         
@@ -204,9 +207,11 @@ async def generate_summary(history: List[Dict[str, str]]) -> str:
         except Exception as e:
             # Fall back to FreeLLMAPI proxy for summary
             try:
-                proxy_url = "http://localhost:3001/v1/chat/completions"
+                base_url = os.getenv("OPENAI_API_BASE", "https://my-freellmapi-proxy.onrender.com/v1").rstrip("/")
+                proxy_url = f"{base_url}/chat/completions"
+                api_key = os.getenv("OPENAI_API_KEY", "freellmapi-ec75ec409b980a3248a3b64f0a702afb51781feb35d3ec23")
                 proxy_headers = {
-                    "Authorization": "Bearer freellmapi-9a1c00a670d3d3d1a9a7b276f24e8c60e8ad730e2e110bb6",
+                    "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
                 }
                 proxy_messages = [{"role": "system", "content": system_instruction}]
